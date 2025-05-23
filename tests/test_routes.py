@@ -1,4 +1,3 @@
-######################################################################
 # Copyright 2016, 2023 John J. Rofrano. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +44,7 @@ BASE_URL = "/products"
 
 
 ######################################################################
-#  T E S T   C A S E S
+#   T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
 class TestProductRoutes(TestCase):
@@ -69,7 +68,7 @@ class TestProductRoutes(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
-        db.session.query(Product).delete()  # clean up the last tests
+        db.session.query(Product).delete()   # clean up the last tests
         db.session.commit()
 
     def tearDown(self):
@@ -93,7 +92,7 @@ class TestProductRoutes(TestCase):
         return products
 
     ############################################################
-    #  T E S T   C A S E S
+    #   T E S T   C A S E S
     ############################################################
     def test_index(self):
         """It should return the index page"""
@@ -166,6 +165,30 @@ class TestProductRoutes(TestCase):
     #
     # ADD YOUR TEST CASES HERE
     #
+
+    # ----------------------------------------------------------
+    # TEST READ
+    # ----------------------------------------------------------
+    def test_get_product(self):
+        """It should Get a single Product"""
+        # get the id of a product
+        test_product = self._create_products(1)[0]
+        response = self.client.get(f"{BASE_URL}/{test_product.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["name"], test_product.name)
+        # It's good practice to assert all fields when reading
+        self.assertEqual(data["description"], test_product.description)
+        self.assertEqual(Decimal(data["price"]), test_product.price)
+        self.assertEqual(data["available"], test_product.available)
+        self.assertEqual(data["category"], test_product.category.name)
+
+    def test_get_product_not_found(self):
+        """It should not Get a Product thats not found"""
+        response = self.client.get(f"{BASE_URL}/0")  # Using an ID that is unlikely to exist
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        self.assertIn("was not found", data["message"])
 
     ######################################################################
     # Utility functions
